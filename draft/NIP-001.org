@@ -1,0 +1,162 @@
+#+TITLE: A common structure for KVService
+#+DATE: <2022-10-22 Sat>
+#+AUTHOR: Nyk Ma <nykma@mask.io>
+#+LANGUAGE: en-US
+
+| Author                 | Discuss on | Status | Category  | Created At       |
+|------------------------+------------+--------+-----------+------------------|
+| Nyk Ma <nykma@mask.io> | [[https://github.com/nextdotid/NIP/issues/3][issue #3]]   | Draft  | KVService | <2022-10-22 Sat> |
+
+| Updated at       | Changelog   |
+|------------------+-------------|
+| <2022-10-22 Sat> | First draft |
+
+#+begin_quote
+The term *MUST*, *MUST NOT*, *SHOULD* and *MAY* below follows [[https://www.ietf.org/rfc/rfc2119.txt][RFC2119]] standard.
+#+end_quote
+
+* Glossary
+
+[[https://docs.next.id/kv-service/kv-intro][KVService]] is a general key-value-based data store / read protocol.
+
+Basiclly, there is *no* restrictions for the data structure: all
+=JSON=-valid data can be accepted and will be "patched" in the
+specific namespace.
+
+#+begin_quote
+As we said in [[https://docs.next.id/kv-service/kv-intro#brief-of-design][KVService doc]], user data modification is performed as a
+"patch" which follows [[https://www.rfc-editor.org/rfc/rfc7396][RFC7396]] standard.
+#+end_quote
+
+To
+
+1. let all web3 apps not mess up with other app's data,
+2. reuse some common user data with confidence and certain, and
+3. let user distinguish and control data more conveniently,
+
+we propose a general data structure for common scenarios that
+all apps using KVService *SHOULD* follow.
+
+* Basic structure
+
+*** Namespace
+
+Each user will have N+1 storage space:
+
+- 1: user's =avatar=.
+- N: each binding record under this =avatar= in =ProofService=.
+
+Namespaces are separated, and each of them has theoretically no
+limitation of data size.
+
+*** The "root" level
+
+Root level of a namespace should be keys which *SHOULD* follow [[https://en.wikipedia.org/wiki/Reverse_domain_name_notation][reverse
+domain name notation]] with your app's own identifier.
+
+#+begin_quote
+tl;dr: Java namespace style. Something like ="id.next.consumer-app"=.
+#+end_quote
+
+Both =avatar= and =single_proof= namespace *SHOULD* follow this structure.
+
+
+* Proposal: =common= field
+
+Here at this NIP, we propose a common field named =common=.
+
+This field *MUST* *ONLY* be stored under a user's =avatar= namespace.
+
+Here's a full sample. Followed by by-section explanations.
+
+#+begin_src js
+  {
+      // Proposal starts from here.
+      "common": {
+          "name": "Nyk Ma",
+          "description": "aka Bio / Summary / short description of me.",
+          "avatars": [
+              "ipfs://xxxx/avatar.png",
+              "https://example.com/avatar.png"
+          ],
+          "social": {
+              "id.next": [{
+                  "value": "0x02.........................",
+                  "comment": "My main NextID avatar",
+                  "starred": true
+              }],
+              "com.twitter": [{
+                  "value": "nextdotid",
+                  "comment": "Main twitter account",
+                  "starred": true
+              }],
+              "com.github": [{
+                  "value": "nextdotid",
+                  "comment": "Main github account",
+                  "starred": false
+              }],
+              "org.telegram": [{
+                  "value": "xxx",
+                  "comment": "",
+                  "starred": false
+              }],
+              "com.discord": [{
+                  "value": "DiscordUsername#1234",
+                  "comment": "",
+                  "starred": false
+              }],
+              "com.reddit": [{
+                  "value": "reddit_username",
+                  "comment": "",
+                  "starred": false
+              }],
+              "email": [{
+                  "value": "nykma@next.id",
+                  "comment": "developer email",
+                  "starred": false
+              }],
+              "url": [{
+                  "value": "https://docs.next.id",
+                  "comment": "NextID doc site",
+                  "starred": true
+              }]
+          },
+          "crypto": {
+              "eth": [{
+                  "address": "0x0da.....................................",
+                  "comment": "My main eth address",
+                  "starred": true
+              }, {
+                  "address": "0x02......................................",
+                  "comment": "My sub wallet",
+                  "starred": false
+              }],
+              "matic": [{
+                  "address": "0x03......................................",
+                  "comment": "My Polygon wallet",
+                  "starred": false
+              }],
+              "btc": [{
+                  "address": "1B..................",
+                  "comment": "My main BTC address",
+                  "starred": true
+              }]
+          },
+          "favorite": {
+              "nft://evm/CHAIN_ID/0xCONTRACT_ADDRESS/NFT_ID": {
+                  "createdBy": "bio.web5.user-defined",
+                  "weight": 100
+              }
+          }
+      },
+      // Proposal ends here.
+      // App-specific data lie below.
+      // Not a part of this NIP.
+      "org.uniswap.app": {
+          "favoriteTokenList:": ["usdt", "mask"]
+      },
+      "id.next.browser_plugin": {
+          "persona": ["0x0ea0........."]
+      }
+  }
+#+end_src
